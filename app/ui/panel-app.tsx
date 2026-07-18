@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 type Role = "employee" | "hr" | "operations";
 type WorkState =
@@ -115,13 +115,8 @@ function nowLabel() {
   }).format(new Date());
 }
 
-export function PanelApp() {
+export function PanelApp({ role }: { role: Role }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const roleParam = searchParams.get("role") as Role | null;
-  const role: Role = ["employee", "hr", "operations"].includes(roleParam ?? "")
-    ? (roleParam as Role)
-    : "employee";
   const isEmployee = role === "employee";
   const [view, setView] = useState(isEmployee ? "clock" : "overview");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -154,6 +149,12 @@ export function PanelApp() {
   const showToast = (message: string) => {
     setToast(message);
     window.setTimeout(() => setToast(""), 3600);
+  };
+
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.replace("/");
+    router.refresh();
   };
 
   const clockIn = () => {
@@ -198,7 +199,7 @@ export function PanelApp() {
 
   const resolveApproval = (id: number, approved: boolean) => {
     setApprovals((current) => current.filter((item) => item.id !== id));
-    showToast(approved ? "Solicitud autorizada y auditada." : "Solicitud rechazada y auditada.");
+    showToast(approved ? "Solicitud autorizada en esta demostración." : "Solicitud rechazada en esta demostración.");
   };
 
   const downloadExcel = () => {
@@ -261,7 +262,7 @@ export function PanelApp() {
         <section className="card">
           <div className="card-header">
             <div>
-              <h2>Histórico personal</h2>
+              <h2>Movimientos de la sesión</h2>
               <p>Jornadas, pausas, retardos y autorizaciones</p>
             </div>
           </div>
@@ -332,7 +333,7 @@ export function PanelApp() {
                   <div><strong>Corrección de pausa</strong><span>15 jul · Nébula Retail</span></div>
                   <span className="badge badge--success">Autorizada</span>
                 </div>
-                <p>Se ajustó el fin de pausa a las 14:06. El registro original permanece en auditoría.</p>
+                <p>Se ajustó el fin de pausa a las 14:06 para fines de esta demostración.</p>
               </div>
               <div className="approval-item">
                 <div className="approval-heading">
@@ -400,7 +401,7 @@ export function PanelApp() {
 
         <aside className="card">
           <div className="card-header">
-            <div><h2>Actividad de hoy</h2><p>Todos los movimientos quedan auditados</p></div>
+            <div><h2>Actividad de hoy</h2><p>Los movimientos se conservan durante esta sesión</p></div>
             <button className="text-action" onClick={() => setModal("change")}>Solicitar cambio</button>
           </div>
           <div className="card-body">
@@ -419,7 +420,7 @@ export function PanelApp() {
             )}
             <div className="alert-box">
               <span aria-hidden="true">IP</span>
-              <div><strong>Monitoreo de ciudad activo</strong>La IP se registra en cada movimiento. Un cambio de ciudad generará una alerta sin bloquear el registro.</div>
+              <div><strong>Monitoreo de ciudad pendiente</strong>La geolocalización de IP se habilitará al conectar el proveedor configurado.</div>
             </div>
           </div>
         </aside>
@@ -542,7 +543,7 @@ export function PanelApp() {
             </button>
           ))}
         </nav>
-        <div className="sidebar-profile"><span className="avatar">{profile.initials}</span><div className="profile-copy"><strong>{profile.name}</strong><span>{profile.title}</span></div><button className="icon-button" aria-label="Cerrar sesión" onClick={() => router.push("/")}>↗</button></div>
+        <div className="sidebar-profile"><span className="avatar">{profile.initials}</span><div className="profile-copy"><strong>{profile.name}</strong><span>{profile.title}</span></div><button className="icon-button" aria-label="Cerrar sesión" onClick={logout}>↗</button></div>
       </aside>
 
       <section className="main-area">
@@ -566,7 +567,7 @@ export function PanelApp() {
         <div className="modal-backdrop" role="presentation">
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="provisional-title">
             <div className="modal-header"><div><h2 id="provisional-title">Registrar salida provisional</h2><p>La jornada quedará abierta, pero necesitarás autorización para volver a entrar.</p></div><button className="icon-button" aria-label="Cerrar" onClick={() => setModal(null)}>X</button></div>
-            <div className="modal-body"><div className="field"><label htmlFor="provisional-reason">Motivo</label><textarea id="provisional-reason" placeholder="Describe brevemente el motivo de la salida" required /></div><div className="alert-box"><span aria-hidden="true">!</span><div><strong>Importante</strong>El tiempo fuera no se suma a la jornada laborada y el movimiento quedará en el histórico.</div></div></div>
+            <div className="modal-body"><div className="field"><label htmlFor="provisional-reason">Motivo</label><textarea id="provisional-reason" placeholder="Describe brevemente el motivo de la salida" required /></div><div className="alert-box"><span aria-hidden="true">!</span><div><strong>Importante</strong>El tiempo fuera no se suma a la jornada laborada en esta demostración.</div></div></div>
             <div className="modal-footer"><button className="ghost-button" onClick={() => setModal(null)}>Cancelar</button><button className="primary-button" onClick={provisionalExit}>Confirmar salida</button></div>
           </div>
         </div>
@@ -575,7 +576,7 @@ export function PanelApp() {
       {modal === "change" ? (
         <div className="modal-backdrop" role="presentation">
           <div className="modal" role="dialog" aria-modal="true" aria-labelledby="change-title">
-            <div className="modal-header"><div><h2 id="change-title">Petición de cambio</h2><p>El registro original no se modifica hasta que RH u Operaciones autoricen la solicitud.</p></div><button className="icon-button" aria-label="Cerrar" onClick={() => setModal(null)}>X</button></div>
+            <div className="modal-header"><div><h2 id="change-title">Petición de cambio</h2><p>La solicitud queda disponible para revisión durante esta demostración.</p></div><button className="icon-button" aria-label="Cerrar" onClick={() => setModal(null)}>X</button></div>
             <div className="modal-body"><div className="field"><label htmlFor="change-type">Tipo de petición</label><select id="change-type"><option>Corrección de hora</option><option>Reingreso</option><option>Horas extra</option><option>Otro</option></select></div><div className="field"><label htmlFor="change-reason">Motivo</label><textarea id="change-reason" placeholder="Explica el cambio solicitado" required /></div></div>
             <div className="modal-footer"><button className="ghost-button" onClick={() => setModal(null)}>Cancelar</button><button className="primary-button" onClick={requestChange}>Enviar petición</button></div>
           </div>

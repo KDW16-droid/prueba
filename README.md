@@ -28,14 +28,14 @@ antes de utilizar el sistema en producción.
 
 ## Cuentas de demostración
 
-| Perfil | Correo | Contraseña |
-| --- | --- | --- |
-| Empleado | `diego.ramirez@melius.demo` | `Melius2026!` |
-| Recursos Humanos | `rh@melius.demo` | `Melius2026!` |
-| Dirección de Operaciones | `operaciones@melius.demo` | `Melius2026!` |
+| Perfil | Correo |
+| --- | --- |
+| Empleado | `diego.ramirez@melius.demo` |
+| Recursos Humanos | `rh@melius.demo` |
+| Dirección de Operaciones | `operaciones@melius.demo` |
 
-Estas credenciales son únicamente para la POC y deben eliminarse antes de un
-despliegue productivo.
+Configura `SESSION_SECRET` y `DEMO_PASSWORD` en `.env.local` antes de iniciar
+la POC. No uses cuentas de demostración en un entorno público.
 
 ## Requisitos
 

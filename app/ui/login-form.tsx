@@ -3,16 +3,6 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const accounts = [
-  { label: "Empleado", email: "diego.ramirez@melius.demo", role: "employee" },
-  { label: "RH", email: "rh@melius.demo", role: "hr" },
-  {
-    label: "Operaciones",
-    email: "operaciones@melius.demo",
-    role: "operations",
-  },
-] as const;
-
 export function LoginForm() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -20,22 +10,27 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
 
-  const selectDemo = (account: (typeof accounts)[number]) => {
-    setEmail(account.email);
-    setPassword("Melius2026!");
-    setMessage(`Cuenta ${account.label} preparada para la demostración.`);
-  };
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const account = accounts.find((item) => item.email === email.trim());
+    setMessage("");
 
-    if (!account || password !== "Melius2026!") {
-      setMessage("Para la POC utiliza una de las cuentas de demostración.");
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        password,
+        remember: new FormData(event.currentTarget).get("remember") === "on",
+      }),
+    });
+
+    if (!response.ok) {
+      setMessage("No fue posible iniciar sesión. Verifica tus credenciales.");
       return;
     }
 
-    router.push(`/panel?role=${account.role}`);
+    router.replace("/panel");
+    router.refresh();
   };
 
   return (
@@ -107,22 +102,6 @@ export function LoginForm() {
           Iniciar sesión
         </button>
       </form>
-
-      <div className="demo-accounts">
-        <span>Cuentas para probar la POC</span>
-        <div className="demo-account-grid">
-          {accounts.map((account) => (
-            <button
-              className="demo-account"
-              key={account.role}
-              type="button"
-              onClick={() => selectDemo(account)}
-            >
-              {account.label}
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

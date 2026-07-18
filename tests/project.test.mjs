@@ -22,6 +22,20 @@ test("includes employee and authorization workflows", async () => {
   assert.match(panel, /Exportar Excel/);
 });
 
+test("protects the panel with a server-side session", async () => {
+  const panelPage = await readFile(new URL("app/panel/page.tsx", root), "utf8");
+  const panel = await readFile(new URL("app/ui/panel-app.tsx", root), "utf8");
+  const login = await readFile(new URL("app/ui/login-form.tsx", root), "utf8");
+  const loginRoute = await readFile(new URL("app/api/auth/login/route.ts", root), "utf8");
+
+  assert.match(panelPage, /readSession/);
+  assert.match(panelPage, /redirect\("\/"\)/);
+  assert.match(panel, /PanelApp\(\{ role \}/);
+  assert.doesNotMatch(panel, /useSearchParams|roleParam/);
+  assert.doesNotMatch(login, /Melius2026|\?role=/);
+  assert.match(loginRoute, /httpOnly: true/);
+});
+
 test("keeps PostgreSQL migrations under version control", async () => {
   const schema = await readFile(new URL("db/schema.ts", root), "utf8");
   const firstMigration = await readFile(
